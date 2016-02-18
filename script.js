@@ -52,7 +52,7 @@ function checkBoard(board) {
 }
 
 // returns either "tie" or an array of 3 positions
-function getWinningPositions(board) {
+function getWinningToken(board) {
 	function match(a, b, c) {
 		if (a === 0) { return false; }
 		return (a === b) && (a === c);
@@ -72,6 +72,44 @@ function getWinningPositions(board) {
 	var isTie = board.indexOf(0) === -1;
 	if (isTie) { return 0; }
 	else { return false; }
+}
+// getWinningPositions is should only be called once game is done, to highlight the winning squares
+function getWinningPositions() {
+	function match(a, b, c) {
+		if (a === 0) { return false; }
+		return (a === b) && (a === c);
+	}
+	// horizontal
+	if (match(board[0], board[1], board[2])) { return [0, 1, 2]; }
+	if (match(board[3], board[4], board[5])) { return [3, 4, 5]; }
+	if (match(board[6], board[7], board[8])) { return [6, 7, 8]; }
+	// vertical
+	if (match(board[0], board[3], board[6])) { return [0, 3, 6]; }
+	if (match(board[1], board[4], board[7])) { return [1, 4, 7]; }
+	if (match(board[2], board[5], board[8])) { return [2, 5, 8]; }
+	// diagonal
+	if (match(board[0], board[4], board[8])) { return [0, 4, 8]; }
+	if (match(board[2], board[4], board[6])) { return [2, 4, 6]; }
+	
+	var isTie = board.indexOf(0) === -1;
+	if (isTie) { return [0, 1, 2, 3, 4, 5, 6, 7, 8]; }
+	else { return false; }
+}
+// NOTE!! ALSO RESETS THE GAME BOARD
+function flashWinningPositions() {
+	var squaresToFlash = getWinningPositions();
+	if (squaresToFlash === false) { return; }
+	var flashColor = 'green';
+	var flashDuration = 1000;
+	var squares = document.getElementsByClassName('board-square');
+	var originalColor = squares[0].style.backgroundColor; // assume squares share the same colorDepth
+	squaresToFlash.map(function(i) {
+		squares[i].style.backgroundColor = flashColor;
+		setTimeout(function() {
+			squares[i].style.backgroundColor = originalColor;
+			humanIsX ? press('X') : press('O');
+		}, flashDuration);
+	});
 }
 
 // turnOf is either +1 (AI) or -1 (human)
@@ -204,6 +242,7 @@ function AIMove() {
 		console.log("AI plays", position);
 		playSquare(position);
 		isCurrentlyTurnOfHuman = true;
+		flashWinningPositions()
 	}, timeDelay);
 }
 function humanMove(position) {
@@ -214,15 +253,18 @@ function humanMove(position) {
 			console.log("YOU PRESSED", position, "!");
 			isCurrentlyTurnOfHuman = false;
 			AIMove();
+			flashWinningPositions()
 		}
 	}
 }
 document.addEventListener("DOMContentLoaded", function(event) {
 	document.getElementById("start-o").onclick = function() {
 		press('O');
+		flashWinningPositions(); //only runs if game finished
 	}
 	document.getElementById("start-x").onclick = function() {
 		press('X');
+		flashWinningPositions(); //only runs if game finished
 	}
 	
 	for(var i = 0; i < squares.length; i++) {
@@ -269,6 +311,4 @@ function boardMove(parentBoard, pos, val) {
 	newBoard[pos] = val;
 	return newBoard;
 }
-
-
 

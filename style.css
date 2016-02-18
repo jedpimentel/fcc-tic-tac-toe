@@ -5,6 +5,8 @@
 	width: 400px;
 	height: 400px;
 	border: 1px dotted green;
+	
+	display: inline-block;
 }
 
 /*this is a button*/
@@ -19,6 +21,17 @@
 	background-color: #EEE
 }
 
+.start-button {
+	background-color: cyan;
+	font-weight: bold;
+}
 
 
+body {
+	border: 1px dotted black;
+	text-align: center;
+}
 
+#board-text {
+	text-align: right;
+}
