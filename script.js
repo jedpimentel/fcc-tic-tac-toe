@@ -1,6 +1,6 @@
 /*
 ░░░░░░░░░ TIC-TAC-TOE ARRAY
-░ 0│1│2 ░ array[0] is upper left corner
+░ 0│1│2 ░ each board is an array with 9 values, array[0] is upper left corner
 ░ ─┼─┼─ ░  
 ░ 3│4│5 ░  G L O S S A R Y
 ░ ─┼─┼─ ░   empty   :  0
@@ -9,21 +9,33 @@
 
 example: human plays upper left corner, so array[0] = -1
 Human moves are negative since code is written from AI's perspective
+The tokens (O/X) are calculated depending on the `humanIsX` variable
 */
 
+var squares = document.getElementsByClassName("board-square");
+var board = [
+	0, 0, 0,
+	0, 0, 0,
+	0, 0, 0,
+];
 
-function GameBoard() {
-	
+// takes a board array and returns an array of valid moves (emptyPositions.length is num of valid moves)
+// returns false if there are no valid moves
+function validMoves(boardArr) {
+	if (checkBoard(boardArr) !== false) {
+		//game already ended
+		return false;
+	}
+	var emptyPositions = [];
+	if (checkBoard(boardArr) === false) {
+		boardArr.map(function(value, index) {
+			if (value === 0) { emptyPositions.push(index); }
+		});
+	}
+	return emptyPositions;
 }
 
-function gameWinner() {};
-
-
-
-
-
-
-// checkBoard takes a board array.
+// checkBoard takes a board array
 // checkBoard returns:
 //     -1: human won
 //     +1: AI won
@@ -51,29 +63,43 @@ function checkBoard(board) {
 	else { return false; }
 }
 
-// returns either "tie" or an array of 3 positions
-function getWinningToken(board) {
-	function match(a, b, c) {
-		if (a === 0) { return false; }
-		return (a === b) && (a === c);
+//returns a NEW board array with the updated position
+function boardMove(parentBoard, pos, val) {
+	var newBoard = parentBoard.slice();
+	if (newBoard[pos] !== 0) {
+		console.log('attempted to move to a used position');
+		throw 'invalid move position'
 	}
-	// horizontal
-	if (match(board[0], board[1], board[2])) { return board[0]; }
-	if (match(board[3], board[4], board[5])) { return board[3]; }
-	if (match(board[6], board[7], board[8])) { return board[6]; }
-	// vertical
-	if (match(board[0], board[3], board[6])) { return board[0]; }
-	if (match(board[1], board[4], board[7])) { return board[1]; }
-	if (match(board[2], board[5], board[8])) { return board[2]; }
-	// diagonal
-	if (match(board[0], board[4], board[8])) { return board[0]; }
-	if (match(board[2], board[4], board[6])) { return board[2]; }
-	
-	var isTie = board.indexOf(0) === -1;
-	if (isTie) { return 0; }
-	else { return false; }
+	newBoard[pos] = val;
+	return newBoard;
 }
+// turnOf is either +1 (AI) or -1 (human)
+// returns point value of board fed to it, should return between -10 and +10
+// feed possible moves/boards to this function to get the best move
+// similar to `checkBoard`, but also returns values for "in progress" games
+function superCheckBoard(board, turnOf, iterationValue) {
+	var iterationValue = iterationValue || 10;
+	var boardCheck = checkBoard(board);
+	if (boardCheck !== false) {
+		//game finished
+		return iterationValue * boardCheck;
+	} else {
+		var possibleMoves = validMoves(board); // aray with square numbers that re empty
+		var possibleBoards = possibleMoves.map(function(move) {
+			return boardMove(board, move, turnOf);
+		});
+		var possibleValues = possibleBoards.map(function(subBoard) {
+			return superCheckBoard(subBoard, turnOf * (-1), iterationValue - 1);
+		});
+		return possibleValues.reduce(function(a, b) {
+			if(turnOf == +1) return Math.max(a, b);
+			if(turnOf == -1) return Math.min(a, b);
+		});
+	}
+}
+
 // getWinningPositions is should only be called once game is done, to highlight the winning squares
+// basically the same as the checkBoard, but instead returns an array of positions that won 
 function getWinningPositions() {
 	function match(a, b, c) {
 		if (a === 0) { return false; }
@@ -94,47 +120,6 @@ function getWinningPositions() {
 	var isTie = board.indexOf(0) === -1;
 	if (isTie) { return [0, 1, 2, 3, 4, 5, 6, 7, 8]; }
 	else { return false; }
-}
-// NOTE!! ALSO RESETS THE GAME BOARD
-function flashWinningPositions() {
-	var squaresToFlash = getWinningPositions();
-	if (squaresToFlash === false) { return; }
-	var flashColor = 'green';
-	var flashDuration = 1000;
-	var squares = document.getElementsByClassName('board-square');
-	var originalColor = squares[0].style.backgroundColor; // assume squares share the same colorDepth
-	squaresToFlash.map(function(i) {
-		squares[i].style.backgroundColor = flashColor;
-		setTimeout(function() {
-			squares[i].style.backgroundColor = originalColor;
-			humanIsX ? press('X') : press('O');
-		}, flashDuration);
-	});
-}
-
-// turnOf is either +1 (AI) or -1 (human)
-// returns point value of board fed to it, should return between -10 and +10
-// feed possible moves/boards to this function to get the best move
-
-function superCheckBoard(board, turnOf, iterationValue) {
-	var iterationValue = iterationValue || 10;
-	var boardCheck = checkBoard(board);
-	if (boardCheck !== false) {
-		//game finished
-		return iterationValue * boardCheck;
-	} else {
-		var possibleMoves = validMoves(board); // aray with square numbers that re empty
-		var possibleBoards = possibleMoves.map(function(move) {
-			return boardMove(board, move, turnOf);
-		});
-		var possibleValues = possibleBoards.map(function(subBoard) {
-			return superCheckBoard(subBoard, turnOf * (-1), iterationValue - 1);
-		});
-		return possibleValues.reduce(function(a, b) {
-			if(turnOf == +1) return Math.max(a, b);
-			if(turnOf == -1) return Math.min(a, b);
-		});
-	}
 }
 
 // returns a num, 0-8, representing the best square the AI should move to
@@ -161,22 +146,6 @@ function bestAIMove(board) {
 	return bestMoves[Math.floor(Math.random() * bestMoves.length)];
 }
 
-function testBest(board) {
-	var movesToCheck = validMoves(board);
-	console.log(movesToCheck);
-	for (var i = 0; i < movesToCheck.length; i++) {
-		var newBoard =  boardMove(board, movesToCheck[i], +1);
-		console.log(movesToCheck[i], superCheckBoard(newBoard, -1));
-	}
-}
-
-var squares = document.getElementsByClassName("board-square");
-var board = [
-	0, 0, 0,
-	0, 0, 0,
-	0, 0, 0,
-];
-
 var humanIsX = true;
 function refreshBoard() {
 	function token(i) { // I need to rewrite this for clarity
@@ -196,7 +165,6 @@ function refreshBoard() {
 		squares[index].innerHTML = token(val);
 	});
 }
-
 
 var isCurrentlyTurnOfHuman = true;
 function press(key) {
@@ -218,7 +186,7 @@ function press(key) {
 		isCurrentlyTurnOfHuman = humanIsX = true;
 	}
 	if (0 <= key && key <= 8) {
-		
+		;
 	}
 }
 
@@ -226,23 +194,49 @@ function press(key) {
 function playSquare(position) {
 	var legalMoves = validMoves(board);
 	console.log(legalMoves);
-	if (legalMoves.indexOf(position) > -1) {
+	if (legalMoves && legalMoves.indexOf(position) > -1) {
 		var token = isCurrentlyTurnOfHuman ? (-1) : (+1);
 		board[position] = token;
 		refreshBoard();
 	}
 }
 
+var originalSquareColor;
+// flashes winning positions and resets the game
+function restartGame() {
+	var squaresToFlash = getWinningPositions();
+	if (squaresToFlash === false) { return; }
+	var flashColor = (squaresToFlash.length === 3)? 'green' : 'gray';
+	var flashDuration = 1000;
+	var squares = document.getElementsByClassName('board-square');
+	//originalSquareColor = function(){ return squares[0].style.backgroundColor; }() // assume squares share the same colorDepth
+	
+	squaresToFlash.map(function(i) {
+		squares[i].style.backgroundColor = flashColor;
+		setTimeout(function() {
+			squares[i].style.backgroundColor = originalSquareColor;
+			if(humanIsX) {
+				press('X');
+			}
+			else {
+				press('O');
+			}
+		}, flashDuration);
+	});
+}
+
 // AIMove and humanMove are their own function as a way to force them to take turns
 function AIMove() {
 	// !! add some sort of one to two second delay to make AI feel lifelike
 	var timeDelay = 50 + 450 * Math.random();
+	console.log("AI WILL SOON PLAY if false", isCurrentlyTurnOfHuman);
 	setTimeout(function() {
+		if (isCurrentlyTurnOfHuman) { return; } // for some reason the function is triplicated after the first round of human playing as 'O', this line fixes the issue caused (AI playing 3 times)
 		var position = bestAIMove(board);
 		console.log("AI plays", position);
 		playSquare(position);
 		isCurrentlyTurnOfHuman = true;
-		flashWinningPositions()
+		restartGame()
 	}, timeDelay);
 }
 function humanMove(position) {
@@ -253,62 +247,24 @@ function humanMove(position) {
 			console.log("YOU PRESSED", position, "!");
 			isCurrentlyTurnOfHuman = false;
 			AIMove();
-			flashWinningPositions()
+			restartGame(); //only runs if game finished
 		}
 	}
 }
+
 document.addEventListener("DOMContentLoaded", function(event) {
 	document.getElementById("start-o").onclick = function() {
 		press('O');
-		flashWinningPositions(); //only runs if game finished
 	}
 	document.getElementById("start-x").onclick = function() {
 		press('X');
-		flashWinningPositions(); //only runs if game finished
 	}
 	
 	for(var i = 0; i < squares.length; i++) {
 		squares[i].onclick = humanMove(i);
 		console.log(squares[i])
 	}
+	originalSquareColor = squares[0].style.backgroundColor;
 	refreshBoard();
 });
-
-
-
-
-// takes a board array and returns an array of valid moves (emptyPositions.length is num of valid moves)
-// returns false if there are no valid moves
-function validMoves(boardArr) {
-	if (checkBoard(boardArr) !== false) {
-		//game already ended
-		return false;
-	}
-	var emptyPositions = [];
-	if (checkBoard(boardArr) === false) {
-		boardArr.map(function(value, index) {
-			if (value === 0) { emptyPositions.push(index); }
-		});
-	}
-	return emptyPositions;
-}
-
-function blankBoard() {
-	return [
-		0, 0, 0,
-		0, 0, 0,
-		0, 0, 0,
-	];
-}
-
-//returns a NEW board array with the updated position
-function boardMove(parentBoard, pos, val) {
-	var newBoard = parentBoard.slice();
-	if (newBoard[pos] !== 0) {
-		console.log('attempted to move to a used position');
-		throw 'invalid move position'
-	}
-	newBoard[pos] = val;
-	return newBoard;
-}
 

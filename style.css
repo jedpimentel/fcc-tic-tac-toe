@@ -2,10 +2,11 @@
 
 #game-board {
 	display: block;
-	width: 400px;
-	height: 400px;
-	border: 1px dotted green;
 	
+	width: 95%;
+	max-width: 30em;
+	height: 30em;
+	max-height: 90vh;
 	display: inline-block;
 }
 
@@ -28,8 +29,8 @@
 
 
 body {
-	border: 1px dotted black;
 	text-align: center;
+	padding: 0;
 }
 
 #board-text {
