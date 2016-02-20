@@ -1,0 +1,38 @@
+
+
+#game-board {
+	display: block;
+	
+	width: 95%;
+	max-width: 30em;
+	height: 30em;
+	max-height: 90vh;
+	display: inline-block;
+}
+
+/*this is a button*/
+.board-square {
+	vertical-align: text-top;
+	width: calc( 100% / 3);
+	height: calc( 100% / 3);
+	font-size: 100px;
+	background-color: white;
+}
+.board-square:hover {
+	background-color: #EEE
+}
+
+.start-button {
+	background-color: cyan;
+	font-weight: bold;
+}
+
+
+body {
+	text-align: center;
+	padding: 0;
+}
+
+#board-text {
+	text-align: right;
+}
