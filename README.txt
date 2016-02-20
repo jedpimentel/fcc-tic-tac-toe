@@ -22,3 +22,5 @@ The value of an "in progress board" depends on who's turn it is. (recursion warn
 The AI takes its best possible move, and assumes the human also make a perfect move.
 Humans that don't play perfectly can loose.
 
+Jose Eduardo Pimentel
+/jedpimentel
